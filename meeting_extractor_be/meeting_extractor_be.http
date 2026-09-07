@@ -1,0 +1,6 @@
+@meeting_extractor_be_HostAddress = http://localhost:5238
+
+GET {{meeting_extractor_be_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.14.37216.2
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeetingExtractor.Api", "meeting_extractor_be\MeetingExtractor.Api.csproj", "{FDC45200-24F3-4615-91B8-B2FC0F238D8D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeetingExtractor.Api", "MeetingExtractor.Api\MeetingExtractor.Api.csproj", "{FDC45200-24F3-4615-91B8-B2FC0F238D8D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeetingExtractor.Domain", "MeetingExtractor.Domain\MeetingExtractor.Domain.csproj", "{6F17E75D-E494-4856-8AEB-F19C2962F8F5}"
 EndProject

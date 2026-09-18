@@ -361,3 +361,23 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+## Secrets - NEVER commit these
+appsettings.Development.json
+appsettings.Local.json
+appsettings.Production.json
+*.key
+.env
+.env.local
+.env.*.local
+
+## React / Vite build output
+dist/
+build/
+.vite/
+
+## VS Code
+.vscode/
+
+## macOS
+.DS_Store

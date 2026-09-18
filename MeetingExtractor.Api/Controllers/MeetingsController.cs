@@ -1,6 +1,8 @@
 ﻿using MeetingExtractor.Domain.Entities;
 using MeetingExtractor.Domain.Enums;
+using MeetingExtractor.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
 namespace MeetingExtractor.Api.Controllers;
@@ -19,18 +21,28 @@ public class CreateMeetingRequest
 [Route("api/[controller]")]
 public class MeetingsController : ControllerBase
 {
+    private readonly ApplicationDbContext _context;
+
+    public MeetingsController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+
     private static readonly List<Meeting> _meeting = new();
 
     [HttpGet]
-    public IActionResult GetAll()
+    public async Task<IActionResult> GetAll()
     {
-        return Ok(_meeting);
+        var meetings = await _context.Meetings.ToListAsync();
+        return Ok(meetings);
     }
 
     [HttpGet("{id}")]
-    public IActionResult GetById(Guid id)
+    public async Task<IActionResult> GetById(Guid id)
     {
-        var meeting = _meeting.FirstOrDefault(m => m.Id == id);
+        var meeting = await _context.Meetings.FindAsync(id);
+
         if (meeting is null)
         {
             return NotFound();
@@ -40,7 +52,7 @@ public class MeetingsController : ControllerBase
     }
 
     [HttpPost]
-    public IActionResult Create([FromBody] CreateMeetingRequest request)
+    public async Task<IActionResult> Create([FromBody] CreateMeetingRequest request)
     {
         var meeting = new Meeting
         {
@@ -49,7 +61,9 @@ public class MeetingsController : ControllerBase
             Status = MeetingStatus.Pending,
         };
 
-        _meeting.Add(meeting);
+        _context.Meetings.Add(meeting);
+        await _context.SaveChangesAsync();
+
         return Ok(meeting);
     }
 }

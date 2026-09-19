@@ -13,12 +13,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="AiProviders\" />
     <Folder Include="Persistence\Configurations\" />
     <Folder Include="Persistence\Migrations\" />
     <Folder Include="Persistence\Repositories\" />
@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MeetingExtractor.Domain\MeetingExtractor.Domain.csproj" />
+	<ProjectReference Include="..\MeetingExtractor.Application\MeetingExtractor.Application.csproj" />
   </ItemGroup>
 
 </Project>

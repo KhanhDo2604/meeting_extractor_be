@@ -2,5 +2,6 @@
 {
     public interface IAiProvider
     {
+        Task<string> GenerateReplyAsync(string prompt);
     }
 }

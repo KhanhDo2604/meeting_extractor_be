@@ -1,5 +1,4 @@
-using MeetingExtractor.Infrastructure.Persistence;
-using Microsoft.EntityFrameworkCore;
+using MeetingExtractor.Infrastructure;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,8 +14,7 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddInfrastructureServices(builder.Configuration);
 
 var app = builder.Build();
 

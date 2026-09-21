@@ -1,6 +1,5 @@
-﻿namespace MeetingExtractor.Application.Interfaces
+﻿namespace MeetingExtractor.Application.Interfaces;
+public interface IWhisperService
 {
-    public interface IWhisperService
-    {
-    }
+    Task<string> TranscribeAsync(string audioFilePath);
 }

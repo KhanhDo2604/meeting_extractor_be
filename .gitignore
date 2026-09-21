@@ -381,3 +381,11 @@ build/
 
 ## macOS
 .DS_Store
+
+UploadedAudios/
+
+## Python / Whisper service
+whisper-service/venv/
+whisper-service/__pycache__/
+whisper-service/*.pyc
+whisper-service/temp_*

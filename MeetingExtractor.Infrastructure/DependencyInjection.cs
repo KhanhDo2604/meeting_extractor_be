@@ -1,6 +1,7 @@
 ﻿using MeetingExtractor.Application.Interfaces;
 using MeetingExtractor.Infrastructure.AiProviders;
 using MeetingExtractor.Infrastructure.Persistence;
+using MeetingExtractor.Infrastructure.WhisperService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,8 @@ public static class DependencyInjection
 
         services.AddHttpClient();
         services.AddScoped<IAiProvider, GroqAiProvider>();
+
+        services.AddScoped<IWhisperService, WhisperHttpService>();
 
         return services;
     }

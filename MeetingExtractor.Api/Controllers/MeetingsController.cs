@@ -2,10 +2,13 @@
 using MeetingExtractor.Domain.Entities;
 using MeetingExtractor.Domain.Enums;
 using MeetingExtractor.Infrastructure.Persistence;
+using MeetingExtractor.Application.Meetings;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using Hangfire;
 
 namespace MeetingExtractor.Api.Controllers;
 
@@ -24,14 +27,14 @@ public class CreateMeetingRequest
 public class MeetingsController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
-    private readonly IWhisperService _whisperService;
-    private readonly IAiProvider _aiProvider;
+    private readonly IBackgroundJobClient _backgroundJobClient;
 
-    public MeetingsController(ApplicationDbContext context, IWhisperService whisperService, IAiProvider aiProvider)
+    public MeetingsController(
+        ApplicationDbContext context,
+        IBackgroundJobClient backgroundJobClient)
     {
         _context = context;
-        _whisperService = whisperService;
-        _aiProvider = aiProvider;
+        _backgroundJobClient = backgroundJobClient;
     }
 
     [HttpGet]
@@ -79,14 +82,14 @@ public class MeetingsController : ControllerBase
         if (meeting is null)
         {
             return NotFound();
+
         }
 
         if (audioFile.Length == 0)
-        {
             return BadRequest("Audio file is empty.");
-        }
 
-        var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "UploadedAudios");
+        var uploadsPath = Path.Combine(
+            Directory.GetCurrentDirectory(), "UploadedAudios");
 
         var fileName = $"{meeting.Id}_{audioFile.FileName}";
         var filePath = Path.Combine(uploadsPath, fileName);
@@ -97,64 +100,11 @@ public class MeetingsController : ControllerBase
         }
 
         meeting.AudioUrl = filePath;
-        meeting.Status = MeetingStatus.Transcribing;
         await _context.SaveChangesAsync();
 
-        var transcript = await _whisperService.TranscribeAsync(filePath);
+        _backgroundJobClient.Enqueue<IMeetingProcessingService>(
+            service => service.ProcessMeetingAudioAsync(meeting.Id));
 
-        meeting.Transcript = transcript;
-        meeting.Status = MeetingStatus.Done;
-        await _context.SaveChangesAsync();
-
-        var prompt = $$"""
-            You are an assistant that extracts structured information from meeting transcripts.
-            Given the transcript below, return ONLY a valid JSON object, no extra text, no markdown code block, in this exact format:
-            {
-              "summary": "a short 2-3 sentence summary of the meeting",
-              "action_items": [
-                { "task": "description of the task", "owner": "person responsible or null", "deadline": "YYYY-MM-DD or null" }
-              ]
-            }
-
-            Transcript:
-            {{transcript}}
-            """;
-
-        var aiResponse = await _aiProvider.GenerateReplyAsync(prompt);
-        try
-        {
-            using var document = JsonDocument.Parse(aiResponse);
-            var root = document.RootElement;
-
-            meeting.Summary = root.GetProperty("summary").GetString();
-
-            if (root.TryGetProperty("action_items", out var actionItemsElement))
-            {
-                foreach (var item in actionItemsElement.EnumerateArray())
-                {
-                    var actionItem = new ActionItem
-                    {
-                        Id = Guid.NewGuid(),
-                        MeetingId = meeting.Id,
-                        Task = item.GetProperty("task").GetString() ?? string.Empty,
-                        Owner = item.TryGetProperty("owner", out var owner) ? owner.GetString() : null,
-                        Deadline = item.TryGetProperty("deadline", out var deadline)
-                            && DateTime.TryParse(deadline.GetString(), out var parsedDate)
-                                ? parsedDate
-                                : null
-                    };
-                    _context.ActionItems.Add(actionItem);
-
-                }
-            }
-            meeting.Status = MeetingStatus.Done;
-        }
-        catch(JsonException)
-        {
-            meeting.Status = MeetingStatus.Failed;
-        }
-        await _context.SaveChangesAsync();
-
-        return Ok(meeting);
+        return Accepted(new { meetingId = meeting.Id, status = "Pending" });
     }
 }

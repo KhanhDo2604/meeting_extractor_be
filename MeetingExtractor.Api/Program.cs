@@ -1,5 +1,6 @@
 using MeetingExtractor.Infrastructure;
-
+using Hangfire;
+using Hangfire.PostgreSql;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,16 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddInfrastructureServices(builder.Configuration);
 
+builder.Services.AddHangfire(config =>
+    config.UsePostgreSqlStorage(options => 
+        options.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"))));
+
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseHangfireDashboard("/hangfire");
+}
 
 var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "UploadedAudios");
 if (!Directory.Exists(uploadsPath))

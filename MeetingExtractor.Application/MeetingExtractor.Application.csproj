@@ -17,4 +17,8 @@
     <Folder Include="Meetings\Queries\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MeetingExtractor.Domain\MeetingExtractor.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

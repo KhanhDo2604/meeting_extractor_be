@@ -1,6 +1,8 @@
-using MeetingExtractor.Infrastructure;
 using Hangfire;
 using Hangfire.PostgreSql;
+using MeetingExtractor.Infrastructure;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Path = System.IO.Path;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +23,16 @@ builder.Services.AddHangfire(config =>
     config.UsePostgreSqlStorage(options => 
         options.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"))));
 
+builder.Services
+    .AddGraphQLServer()
+    .AddQueryType<MeetingExtractor.Api.GraphQL.Query>()
+    .AddMutationType<MeetingExtractor.Api.GraphQL.Mutation>()
+    .AddSubscriptionType<MeetingExtractor.Api.GraphQL.Subscription>()
+    .AddInMemorySubscriptions();
+
 var app = builder.Build();
+
+app.MapGraphQL();
 
 if (app.Environment.IsDevelopment())
 {

@@ -2,6 +2,7 @@
 using MeetingExtractor.Application.Meetings;
 using MeetingExtractor.Domain.Interfaces;
 using MeetingExtractor.Infrastructure.AiProviders;
+using MeetingExtractor.Infrastructure.Events;
 using MeetingExtractor.Infrastructure.Persistence;
 using MeetingExtractor.Infrastructure.Persistence.Repositories;
 using MeetingExtractor.Infrastructure.WhisperService;
@@ -25,6 +26,8 @@ public static class DependencyInjection
         services.AddScoped<IMeetingRepository, MeetingRepository>();
 
         services.AddScoped<IMeetingProcessingService,MeetingProcessingService>();
+
+        services.AddScoped<IMeetingEventPublisher, MeetingEventPublisher>();
         return services;
     }
 }

@@ -1,9 +1,11 @@
 ﻿
 
+using HotChocolate.Subscriptions;
 using MeetingExtractor.Application.Interfaces;
 using MeetingExtractor.Domain.Entities;
 using MeetingExtractor.Domain.Enums;
 using MeetingExtractor.Domain.Interfaces;
+
 using System.Text.Json;
 
 namespace MeetingExtractor.Application.Meetings;
@@ -18,15 +20,19 @@ public class MeetingProcessingService : IMeetingProcessingService
     private readonly IWhisperService _whisperService;
     private readonly IAiProvider _aiProvider;
     private readonly IMeetingRepository _meetingRepository;
+    private readonly IMeetingEventPublisher _eventPublisher;
+
 
     public MeetingProcessingService(
         IWhisperService whisperService,
         IAiProvider aiProvider,
-        IMeetingRepository meetingRepository)
+        IMeetingRepository meetingRepository,
+        IMeetingEventPublisher eventPublisher)
     {
         _whisperService = whisperService;
         _aiProvider = aiProvider;
         _meetingRepository = meetingRepository;
+        _eventPublisher = eventPublisher;
     }
 
     public async Task ProcessMeetingAudioAsync(Guid meetingId)
@@ -37,11 +43,13 @@ public class MeetingProcessingService : IMeetingProcessingService
 
         meeting.Status = MeetingStatus.Transcribing;
         await _meetingRepository.SaveChangesAsync();
+        await _eventPublisher.PublishMeetingStatusChangedAsync(meeting);
 
         var transcript = await _whisperService.TranscribeAsync(meeting.AudioUrl);
         meeting.Transcript = transcript;
         meeting.Status = MeetingStatus.Extracting;
         await _meetingRepository.SaveChangesAsync();
+        await _eventPublisher.PublishMeetingStatusChangedAsync(meeting);
 
         var prompt = $$"""
             You are an assistant that extracts structured information from meeting transcripts.
@@ -93,5 +101,6 @@ public class MeetingProcessingService : IMeetingProcessingService
         }
 
         await _meetingRepository.SaveChangesAsync();
+        await _eventPublisher.PublishMeetingStatusChangedAsync(meeting);
     }
 }

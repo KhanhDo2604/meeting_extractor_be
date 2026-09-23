@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using Hangfire;
+using Path = System.IO.Path;
 
 namespace MeetingExtractor.Api.Controllers;
 

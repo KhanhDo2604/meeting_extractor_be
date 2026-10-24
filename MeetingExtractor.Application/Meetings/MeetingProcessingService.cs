@@ -1,7 +1,4 @@
-﻿
-
-using HotChocolate.Subscriptions;
-using MeetingExtractor.Application.Interfaces;
+﻿using MeetingExtractor.Application.Interfaces;
 using MeetingExtractor.Domain.Entities;
 using MeetingExtractor.Domain.Enums;
 using MeetingExtractor.Domain.Interfaces;

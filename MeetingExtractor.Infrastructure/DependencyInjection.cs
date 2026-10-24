@@ -11,12 +11,19 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace MeetingExtractor.Infrastructure;
+
 public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException(
+                "Connection string 'DefaultConnection' is not configured. Set it with dotnet user-secrets.");
+        }
+
+        services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
 
         services.AddHttpClient();
         services.AddScoped<IAiProvider, GroqAiProvider>();
@@ -25,7 +32,7 @@ public static class DependencyInjection
 
         services.AddScoped<IMeetingRepository, MeetingRepository>();
 
-        services.AddScoped<IMeetingProcessingService,MeetingProcessingService>();
+        services.AddScoped<IMeetingProcessingService, MeetingProcessingService>();
 
         services.AddScoped<IMeetingEventPublisher, MeetingEventPublisher>();
         return services;

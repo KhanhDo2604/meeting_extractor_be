@@ -389,3 +389,7 @@ whisper-service/venv/
 whisper-service/__pycache__/
 whisper-service/*.pyc
 whisper-service/temp_*
+
+.env.*
+!.env.example
+secrets.json

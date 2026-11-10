@@ -1,29 +1,30 @@
 ﻿using MeetingExtractor.Application.Interfaces;
-using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 
 namespace MeetingExtractor.Infrastructure.AiProviders;
 
-public class GroqAiProvider: IAiProvider
+public class GroqAiProvider : IAiProvider
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IConfiguration _configuration;
+    public const string HttpClientName = "Groq";
+    private const string Model = "openai/gpt-oss-20b";
 
-    public GroqAiProvider(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    private readonly IHttpClientFactory _httpClientFactory;
+
+    public GroqAiProvider(IHttpClientFactory httpClientFactory)
     {
         _httpClientFactory = httpClientFactory;
-        _configuration = configuration;
     }
 
     public async Task<string> GenerateReplyAsync(string prompt)
     {
-        var apiKey = _configuration["AiSettings:GroqApiKey"];
         var client = _httpClientFactory.CreateClient();
 
         var requestBody = new
         {
-            model = "openai/gpt-oss-20b",
+            model = Model,
             messages = new[]
             {
                 new { role = "user", content = prompt }
@@ -35,15 +36,12 @@ public class GroqAiProvider: IAiProvider
             Encoding.UTF8,
             "application/json");
 
-        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+        using var response = await client.PostAsJsonAsync("v1/chat/completions", requestBody);
+        response.EnsureSuccessStatusCode();
 
-        var response = await client.PostAsync(
-            "https://api.groq.com/openai/v1/chat/completions",
-            jsonContent);
+        await using var responseStream = await response.Content.ReadAsStreamAsync();
+        using var document = await JsonDocument.ParseAsync(responseStream);
 
-        var responseBody = await response.Content.ReadAsStringAsync();
-
-        using var document = JsonDocument.Parse(responseBody);
         var messageContent = document.RootElement
             .GetProperty("choices")[0]
             .GetProperty("message")
